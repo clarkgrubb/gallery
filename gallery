@@ -7,6 +7,7 @@ import random
 import re
 import sys
 
+RX_TAG = re.compile(r'^[a-zA-Z0-9_-]+$')
 RX_IMAGE_ROOT = re.compile(r'^[a-zA-Z0-9_-]+$')
 RX_ROOT = re.compile(r'^([a-zA-Z0-9_-]+)\.')
 IMAGE_SUFFIXES = ['.jpg', '.gif', '.png']
@@ -57,6 +58,8 @@ def image_html(image_dir, path, num_to_tags):
 
 
 def tag_roots(tag, paths):
+    if not RX_TAG.match(tag):
+        raise Exception('invalid tag: {}'.format(tag))
     for path in paths:
         image_dir = os.path.dirname(path) or '.'
         base_path = os.path.basename(path)
