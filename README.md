@@ -9,7 +9,12 @@ Create an HTML gallery for images.
 
 # Use
 
-    $ gallery -t flower 01.jpg
-    $ gallery -t dog 02.jpg 03.jp0g
+Tagging images is optional:
+
+    $ gallery --tag flower 01.jpg
+    $ gallery --tag dog 02.jpg 03.jpg
+
+Create the gallery and view in the browser:
+
     $ gallery .
     $ open index.html
