@@ -1,0 +1,138 @@
+#!/usr/bin/env python3
+import argparse
+import collections
+import glob
+import os
+import random
+import re
+import sys
+
+RX_IMAGE_ROOT = re.compile(r'^\d+$')
+RX_ROOT = re.compile(r'^([a-zA-Z0-9_-]+)\.')
+IMAGE_SUFFIXES = ['.jpg', '.gif', '.png']
+IMAGE_HEIGHT = '380px'
+
+
+def is_image(path):
+    lower_path = path.lower()
+    for suffix in IMAGE_SUFFIXES:
+        if lower_path.endswith(suffix):
+            return True
+    return False
+
+
+def find_image_path(image_dir, root):
+    for suffix in IMAGE_SUFFIXES:
+        paths = glob.glob('{}/{}{}'.format(image_dir, root, suffix))
+        if paths:
+            return paths
+
+    return None
+
+
+def path_to_root(path):
+    lower_path = path.lower()
+    basename = os.path.basename(lower_path)
+    md = RX_ROOT.search(basename)
+    if md:
+        root = md.groups()[0]
+        return root
+
+    return None
+
+
+def image_html(image_dir, path, num_to_tags):
+    root = path_to_root(path)
+    if root:
+        if is_image(path):
+            tags = num_to_tags.get(root, [])
+            tag_links = ['<a href="{}">{}</a>'.format(os.path.join(image_dir, 'gallery', '{}.html'.format(tag)), tag)
+                         for tag
+                         in tags]
+            return '<table style="display:inline-table;"><tr><td><a href="{}"><img src="{}" height="{}"></a><tr><td>{}</table>\n'.format(
+                path,
+                path,
+                IMAGE_HEIGHT,
+                ' '.join(tag_links))
+
+
+def tag_roots(tag, paths):
+    for path in paths:
+        image_dir = os.path.dirname(path) or '.'
+        base_path = os.path.basename(path)
+        if '.' in base_path:
+            root, _sep, _suffix = base_path.rpartition('.')
+        else:
+            root = base_path
+        if find_image_path(image_dir, root):
+            tags_dir = os.path.join(image_dir, '.tags')
+            if not os.path.exists(tags_dir):
+                os.makedirs(tags_dir)
+            tag_path = os.path.join(tags_dir, tag)
+            with open(tag_path, 'a') as f:
+                f.write('{}\n'.format(root))
+        else:
+            sys.stderr.write('does not have image suffix: {}\n'.format(path))
+
+
+def load_tags(image_dir):
+    tags_dir = os.path.join(image_dir, '.tags')
+    if not os.path.exists(tags_dir):
+        os.makedirs(tags_dir)
+    tag_to_nums = collections.defaultdict(list)
+    num_to_tags = collections.defaultdict(list)
+    tag_to_path = collections.defaultdict(list)
+    for tag in os.listdir(tags_dir):
+        with open(os.path.join(tags_dir, tag)) as f:
+            for line in f:
+                stripped = line.strip()
+                md = RX_IMAGE_ROOT.search(stripped)
+                if md:
+                    tag_to_nums[tag].append(stripped)
+                    num_to_tags[stripped].append(tag)
+
+    return num_to_tags, tag_to_path
+
+
+def gallery(image_dir):
+    num_to_tags, tag_to_path = load_tags(image_dir)
+
+    with open('{}/index.html'.format(image_dir), 'w') as f:
+        f.write('<p style="display:inline-table;">\n')
+        paths = glob.glob('{}/*.???'.format(image_dir))
+        random.shuffle(paths)
+        for path in paths:
+            f.write(image_html(image_dir, path, num_to_tags))
+
+    for tag, paths in tag_to_path.items():
+        with open('{}/gallery/{}.html'.format(image_dir, tag), 'w') as f:
+            for path in set(paths):
+                lower_path = path.lower()
+                basename = os.path.basename(lower_path)
+                md = RX_ROOT.search(basename)
+                if md:
+                    root = md.groups()[0]
+                    if lower_path.endswith('.jpg') or lower_path.endswith('.gif') or lower_path.endswith('.png'):
+                        tags = num_to_tags.get(root, [])
+                        tag_links = ['<a href="../{}">{}</a>'.format(os.path.join(image_dir, 'gallery', '{}.html'.format(tag)), tag)
+                                     for tag
+                                     in tags]
+                        f.write('<table style="display:inline-table;"><tr><td><a href="../{}"><img src="../{}" height="{}"></a><tr><td>{}</table>\n'.format(
+                            path,
+                            path,
+                            IMAGE_HEIGHT,
+                            ' '.join(tag_links)))
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--tag', '-t',
+                        dest='tag')
+    args = parser.add_argument('paths', nargs='*')
+    args = parser.parse_args()
+    if args.tag:
+        tag_roots(args.tag, args.paths)
+    else:
+        if len(args.paths) != 1:
+            raise Exception('USAGE: gallery IMAGE_DIR')
+        gallery(args.paths[0])
