@@ -128,9 +128,10 @@ def gallery(image_dir, sort_images=False):
                     root = md.groups()[0]
                     if lower_path.endswith('.jpg') or lower_path.endswith('.gif') or lower_path.endswith('.png'):
                         tags = set(num_to_tags.get(root, []))
-                        tag_links = ['<a href="../{}">{}</a>'.format(os.path.join(image_dir, '.gallery', '{}.html'.format(tag)), tag)
-                                     for tag
-                                     in tags]
+                        tag_links = ['<a href="../index.html">all</a>']
+                        tag_links.extend(['<a href="../{}">{}</a>'.format(os.path.join(image_dir, '.gallery', '{}.html'.format(tag)), tag)
+                                          for tag
+                                          in tags])
                         f.write('<table style="display:inline-table;"><tr><td><a href="../{}"><img src="../{}" height="{}"></a><tr><td>{}</table>\n'.format(
                             path,
                             path,
