@@ -102,6 +102,17 @@ def load_tags(image_dir):
     return num_to_tags, tag_to_paths
 
 
+def gallery_of_directories(directory_of_directories):
+    with open('{}/index.html'.format(directory_of_directories), 'w') as f:
+        f.write('<ul>\n')
+        paths = glob.glob('{}/*'.format(directory_of_directories))
+        for path in paths:
+            basepath = os.path.basename(path)
+            if os.path.isdir(path):
+                f.write('<li><a href="./{}/index.html">{}</a>\n'.format(basepath, basepath))
+        f.write('</ul>\n')
+
+
 def gallery(image_dir, sort_images=False):
     num_to_tags, tag_to_path = load_tags(image_dir)
 
@@ -141,12 +152,17 @@ def gallery(image_dir, sort_images=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('--gallery-of-directories', '-D',
+                        dest='gallery_of_directories',
+                        action='store_true')
     parser.add_argument('--tag', '-t',
                         dest='tag')
     parser.add_argument('--sort', '-s', dest='sort', action='store_true')
     args = parser.add_argument('paths', nargs='*')
     args = parser.parse_args()
-    if args.tag:
+    if args.gallery_of_directories:
+        gallery_of_directories(args.paths[0])
+    elif args.tag:
         tag_roots(args.tag, args.paths)
     else:
         if len(args.paths) != 1:
