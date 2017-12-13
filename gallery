@@ -11,6 +11,7 @@ RX_TAG = re.compile(r'^[a-zA-Z0-9_-]+$')
 RX_IMAGE_ROOT = re.compile(r'^[a-zA-Z0-9_-]+$')
 RX_ROOT = re.compile(r'^([a-zA-Z0-9_-]+)\.')
 IMAGE_SUFFIXES = ['.jpg', '.gif', '.png']
+MOVIE_SUFFIXES = ['.mp4']
 IMAGE_HEIGHT = '380px'
 
 
@@ -42,6 +43,15 @@ def path_to_root(path):
     return None
 
 
+def find_movie_path(basename):
+    for suffix in MOVIE_SUFFIXES:
+        movie_path = basename + suffix
+        if os.path.exists(movie_path):
+            return movie_path
+
+    return None
+
+
 def image_html(image_dir, path, num_to_tags):
     root = path_to_root(path)
     if root:
@@ -50,8 +60,9 @@ def image_html(image_dir, path, num_to_tags):
             tag_links = ['<a href="{}">{}</a>'.format(os.path.join(image_dir, '.gallery', '{}.html'.format(tag)), tag)
                          for tag
                          in tags]
+            movie_path = find_movie_path(root)
             return '<table style="display:inline-table;"><tr><td><a href="{}"><img src="{}" height="{}"></a><tr><td>{}</table>\n'.format(
-                path,
+                movie_path or path,
                 path,
                 IMAGE_HEIGHT,
                 ' '.join(tag_links))
@@ -124,7 +135,9 @@ def gallery(image_dir, sort_images=False):
         else:
             random.shuffle(paths)
         for path in paths:
-            f.write(image_html(image_dir, path, num_to_tags))
+            html = image_html(image_dir, path, num_to_tags)
+            if html:
+                f.write(html)
 
     gallery_dir = os.path.join(image_dir, '.gallery')
     if not os.path.exists(gallery_dir):
