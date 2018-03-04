@@ -116,7 +116,7 @@ def load_tags(image_dir):
 def gallery_of_directories(directory_of_directories):
     with open('{}/index.html'.format(directory_of_directories), 'w') as f:
         f.write('<ul>\n')
-        paths = glob.glob('{}/*'.format(directory_of_directories))
+        paths = sorted(glob.glob('{}/*'.format(directory_of_directories)))
         for path in paths:
             basepath = os.path.basename(path)
             if os.path.isdir(path):
