@@ -10,7 +10,7 @@ import sys
 RX_TAG = re.compile(r'^[a-zA-Z0-9_-]+$')
 RX_IMAGE_ROOT = re.compile(r'^[a-zA-Z0-9_-]+$')
 RX_ROOT = re.compile(r'^([a-zA-Z0-9_-]+)\.')
-IMAGE_SUFFIXES = ['.jpg', '.gif', '.png']
+IMAGE_SUFFIXES = ['.jpg', '.jpeg', '.gif', '.png', '.webp']
 MOVIE_SUFFIXES = ['.mp4']
 IMAGE_HEIGHT = '380px'
 
@@ -129,7 +129,7 @@ def gallery(image_dir, sort_images=False):
 
     with open('{}/index.html'.format(image_dir), 'w') as f:
         f.write('<p style="display:inline-table;">\n')
-        paths = glob.glob('{}/*.???'.format(image_dir))
+        paths = glob.glob('{}/*.*'.format(image_dir))
         if sort_images:
             paths.sort()
         else:
